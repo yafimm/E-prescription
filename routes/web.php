@@ -13,13 +13,21 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 Auth::routes();
 
 
 Route::group(['middleware' => ['web', 'auth']], function() {
-  Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+  Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+  // Medicine Module
+  Route::resource('medicine', App\Http\Controllers\MedicineController::class)->only([
+      'index',
+  ]);
+
+  // Signa Module
+  Route::resource('signa', App\Http\Controllers\SignaController::class)->only([
+      'index',
+  ]);
+
+
 });

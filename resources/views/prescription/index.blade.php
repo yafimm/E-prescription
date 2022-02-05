@@ -54,6 +54,8 @@
                 @endforeach
               </tbody>
             </table>
+            
+            $prescriptions->links()
             <!-- End Table with stripped rows -->
 
           </div>

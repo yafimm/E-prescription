@@ -48,6 +48,9 @@
                 @endforeach
               </tbody>
             </table>
+
+            {{ $medicines->links() }}
+
             <!-- End Table with stripped rows -->
 
           </div>

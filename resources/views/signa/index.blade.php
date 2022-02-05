@@ -46,6 +46,8 @@
                 @endforeach
               </tbody>
             </table>
+
+            {{ $signas->links() }}
             <!-- End Table with stripped rows -->
 
           </div>

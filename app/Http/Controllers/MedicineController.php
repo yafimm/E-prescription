@@ -7,82 +7,76 @@ use Illuminate\Http\Request;
 // Models
 use App\Models\Medicine;
 
+//Facades
+use DB;
+use Log;
+
 class MedicineController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         $medicines = Medicine::active()->paginate(20);
         return view('medicine.index', compact('medicines'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         //
+    }
+
+    public function loadData(Request $request)
+    {
+        if ($request->has('q') && $request->q != '') {
+          $search = $request->q;
+          $data = DB::table('obatalkes_m')
+                      ->select('obatalkes_m.obatalkes_id', 'obatalkes_m.obatalkes_nama', 'obatalkes_m.obatalkes_kode')
+                      ->where(DB::raw("CONCAT(obatalkes_kode, ' - ',obatalkes_nama)"), 'LIKE', '%'.$search.'%');
+
+          $data = $data->take(10)->get();
+          return response()->json($data);
+        }
+    }
+
+
+    public function getMedicine(Request $request)
+    {
+        try {
+          $medicine = Medicine::where('stok', '>', 0)->find($request->medicine_id);
+          if($medicine){
+            if($medicine->stok > 9){
+              return response()->json(['message' => 'Success, Data found', 'status' => true, 'data' => $medicine]);
+            }
+            return response()->json(['message' => 'Failed, Stock is out', 'status' => false]);
+          }
+          return response()->json(['message' => 'Failed, Data not found', 'status' => false]);
+        } catch (\Exception $e) {
+          Log::error($e);
+          return response()->json(['message' => 'Failed, Something wrong and please contact admin~', 'status' => false]);
+        }
     }
 }

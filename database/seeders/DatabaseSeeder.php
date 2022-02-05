@@ -15,6 +15,9 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // \App\Models\User::factory(10)->create();
+        $this->call([
+          UserSeeders::class,
+        ]);
         $this->command->info('---- Medicine table seeding process, takes a few minutes -----!');
         DB::unprepared(file_get_contents('database/seeders_sql/obatalkes_m.sql'));
         $this->command->info('Medicine table seeded!');

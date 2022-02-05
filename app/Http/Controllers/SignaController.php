@@ -7,83 +7,76 @@ use Illuminate\Http\Request;
 // Models
 use App\Models\Signa;
 
+// Facade
+use DB;
 
 class SignaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function index()
     {
         $signas = Signa::active()->paginate(20);
         return view('signa.index', compact('signas'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function create()
     {
 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function show($id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function edit($id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function destroy($id)
     {
         //
     }
+
+
+
+    public function loadData(Request $request)
+    {
+        if ($request->has('q') && $request->q != '') {
+            $search = $request->q;
+            $data = DB::table('signa_m')->select('signa_m.signa_id', 'signa_m.signa_nama', 'signa_m.signa_kode')
+                                        ->where(DB::raw("CONCAT(signa_kode, ' - ',signa_nama)"), 'LIKE', '%'.$search.'%');
+
+
+            $data = $data->take(10)->get();
+            return response()->json($data);
+       }
+   }
+
+
+   public function getSigna(Request $request)
+   {
+        $product = Product::with('product_sizes', 'product_sizes.size:id,name', 'product_sizes.product_child:id,name', 'category:id,name', 'productImage')->find($request->product_id);
+        if($product){
+            return response()->json($product);
+        }
+        return response()->json(['message' => 'Failed, Data not found', 'status' => false]);
+   }
 }

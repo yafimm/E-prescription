@@ -5,23 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PrescriptionItem extends Model
+class Patient extends Model
 {
     use HasFactory;
 
-    protected $table = 'prescription_items';
+    protected $table = 'patients';
 
     protected $fillable = [
-        'prescription_id', 'signa_id', 'name', 'qty', 'type'
+        'name', 'age', 'gender', 'prescription_id'
     ];
 
     public function presciption()
     {
         return $this->belongsTo(Prescription::class);
-    }
-
-    public function presciption_item_detail()
-    {
-        return $this->hasMany(PrescriptionItemDetail::class);
     }
 }

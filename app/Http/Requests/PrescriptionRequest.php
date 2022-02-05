@@ -32,11 +32,11 @@ class PrescriptionRequest extends FormRequest
         }
 
         return [
-          'patient_name'   => $patienName,
-          'patient_age'    => $patientAge,
-          'patient_gender' => $patientGender ,
+          'patient_name'       => $patienName,
+          'patient_age'        => $patientAge,
+          'patient_gender'     => $patientGender ,
           'prescription_items' => 'array|min:1|required',
-          'size_id'     => 'array|required_unless:category_id,1|min:1',
+          'size_id'            => 'array|required_unless:category_id,1|min:1',
           'product_id'  => 'required_if:category_id,1|array|min:2',
           'files'       => $files,
           'files.*'     => 'dimensions:ratio=1/1',

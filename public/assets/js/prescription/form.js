@@ -7,6 +7,33 @@ $(document).ready(function(){
 
   var prescriptionItems = [];
   var medicinesList = [];
+  var medicineConcoction = [];
+
+  var concoctionTable = $('#concoction-datatable').DataTable({
+      searching    : false,
+      lengthChange : false,
+      info         : false,
+      responsive   : true,
+      paginate     : false,
+      autoWidth    : false,
+      columns: [
+                {
+                    name: 'prescription-item-name',
+                    title: 'Name',
+                    width: "20%",
+                },
+                {
+                    name: 'prescription-item-quantity',
+                    title: 'Qty',
+                    width: "10%",
+                },
+                {
+                    title: '#',
+                    width: "5%",
+                    name: "action",
+                },
+      ],
+  });
 
   var prescriptionItemsTable = $('#prescription-datatable').DataTable({
       searching    : false,
@@ -34,6 +61,11 @@ $(document).ready(function(){
                     name: 'prescription-item-detail',
                     title: 'Medicine',
                     width: "30%",
+                },
+                {
+                    name: 'prescription-item-qty-concuction',
+                    title: 'Qty/1',
+                    width: "5%",
                 },
                 {
                     name: 'prescription-item-quantity',
@@ -123,90 +155,170 @@ $(document).ready(function(){
        }
   });
 
-  $('#signa_id').change(function(){
+  $('#medicine_id').change(function(){
+    if($('select[name="prescription_type"] option:selected').val() == 'racikan'){
+      $.ajax({
+        type: 'get', //THIS NEEDS TO BE GET
+        url: urlGetMedicine,
+        dataType: 'json',
+        data: {medicine_id: $(this).val()},
+        success: function (result) {
+          if(result.status == false){
+              $('#cari').empty();
+              Swal.fire('Oops!', result.message,'error');
+          }else{
+              //Kalo data sudah ada di detail, keluar alert
+              if(medicineConcoction.includes(result.data.id)){
+                  swal('Failed', result.data.name + ' already exists!', 'error');
+                  $('#cari').empty();
+              }else{
+                  const medicine = {
+                    id: result.data.obatalkes_id,
+                    name: result.data.obatalkes_kode+' - '+result.data.obatalkes_nama,
+                    stock: result.data.stok,
+                    qty: 0,
+                  };
+
+                  addItemToConcoction(medicine);
+
+                  $('#medicine_id').empty();
+                  Swal.fire('Success', 'You have added '+medicine.name+ ' to concoction', 'success');
+            }
+
+        }
+
+      },error:function (request, status, error){
+          Swal.fire(
+            'Oops!',
+            'Something wrong!, please contact admin.',
+            'error'
+          );
+          console.log(status);
+        }
+      });
+    }
+  });
+
+  $('select[name="prescription_type"]').on('change', function(){
+      if($(this).val() == 'racikan'){
+        $('#js-medicine-concoction').show();
+        // $('#js-medicine-concoction').css('display','block');
+      }else{
+        $('#js-medicine-concoction').hide();
+      }
+      // $('#js-medicine-concoction').css('display','none');
 
   });
 
   $('#js-add-prescription-item').on('click', function(){
+    if(validatePrescription()){
       const prescriptionName      = $('input[name="prescription_name"]').val();
       const prescriptionType      = $('select[name="prescription_type"] option:selected').val();
       const prescriptionSignaId   = $('select[name="signa_id"] option:selected').val();
       const prescriptionSignaName = $('select[name="signa_id"] option:selected').html();
+
       // Check the prescription name already in list
       if(prescriptionItems.some( prescriptionItem => prescriptionItem['name'] != prescriptionName ) || prescriptionItems.length == 0){
-        $.ajax({
-            type: 'get', //THIS NEEDS TO BE GET
-            url: urlGetMedicine,
-            dataType: 'json',
-            data: {medicine_id: $('select[name="medicine_id"] option:selected').val()},
-            success: function (result) {
-              if(result.status == false){
-                $('#medicine_id').empty();
-                swal('Failed', result.message, 'error');
-              }else{
-                let medicine;
-                //Find index of specific object using findIndex method.
-                let medicineListIndex = medicinesList.findIndex((obj => obj.id == result.data.obatalkes_id));
-                //check if medicine already exist in table
-                if(medicinesList[medicineListIndex] === true){
-                  medicinesList[medicineListIndex].stock = result.data.stok;
-                  medicine = medicineList[medicineListIndex];
+        let medicines;
+
+        if($('select[name="prescription_type"] option:selected').val() != 'racikan'){
+          //Get Medicine data for non racikan
+          $.ajax({
+              type: 'get', //THIS NEEDS TO BE GET
+              url: urlGetMedicine,
+              dataType: 'json',
+              data: {medicine_id: $('select[name="medicine_id"] option:selected').val()},
+              success: function (result) {
+                if(result.status == false){
+                  $('#medicine_id').empty();
+                  Swal.fire('Oops!', result.message,'error');
                 }else{
-                  medicine = {
-                    id: result.data.obatalkes_id,
-                    name: result.data.obatalkes_kode+' - '+result.data.obatalkes_nama,
-                    stock: result.data.stok
-                  }
-                  medicinesList.push(medicine);
+                    medicines = [{id: result.data.obatalkes_id,
+                                  name: result.data.obatalkes_kode+' - '+result.data.obatalkes_nama,
+                                  stock: result.data.stok,
+                                  qty: 1,}];
+                    //check if medicine already exist in table
+                    medicines.forEach((medicine, i) => {
+                      //Find index of specific object using findIndex method.
+                      let medicineListIndex = medicinesList.findIndex((obj => obj.id == medicine.id));
+                      if(medicinesList[medicineListIndex] === true){
+                        medicinesList[medicineListIndex].stock = medicine.stock;
+                      }else{
+                        medicinesList.push(medicine);
+                      }
+                    });
+
+                    const prescriptionItem = {
+                      name: prescriptionName,
+                      type: prescriptionType,
+                      qty: 0,
+                      medicines: medicines,
+                      signa: {
+                        id: prescriptionSignaId,
+                        name: prescriptionSignaName,
+                      }
+                    };
+
+
+                    addItem(prescriptionItem);
+
+                    clearPrescriptionForm();
+
+                    Swal.fire('Success!','You have added '+prescriptionItem.name,'success');
+
                 }
-
-                const prescriptionItem = {
-                  name: prescriptionName,
-                  type: prescriptionType,
-                  qty: 0,
-                  medicines: [{
-                    id: medicine.id,
-                    name: medicine.name,
-                    qty: 1,
-                  }],
-                  signa: {
-                    id: prescriptionSignaId,
-                    name: prescriptionSignaName,
-                  }
-                };
-
-                addItem(prescriptionItem);
-
-                clearPrescriptionFrom();
-
-                Swal.fire(
-                  'Success!',
-                  'You have added '+result.data.obatalkes_nama,
-                  'success'
-                )
+              },error:function (request, status, error){
+                  Swal.fire('Oops!','Something wrong!, please contact admin.','error');
+                  console.log(error);
               }
+          });
+        }else{
+          // store medicineConcoction to medicine for store to prescription item
+          medicines = medicineConcoction;
 
-            },error:function (request, status, error){
-                  Swal.fire(
-                    'Oops!',
-                    'Something wrong!, please contact admin.',
-                    'error'
-                  );
-                  
-                 console.log(result);
+          // clear datatable and concoction
+          concoctionTable.clear().draw();
+          medicineConcoction = [];
+          //check if medicine already exist in table
+          medicines.forEach((medicine, i) => {
+            //Find index of specific object using findIndex method.
+            let medicineListIndex = medicinesList.findIndex((obj => obj.id == medicine.id));
+            if(medicinesList[medicineListIndex] === true){
+              medicinesList[medicineListIndex].stock = medicine.stock;
+            }else{
+              medicinesList.push(medicine);
             }
-        });
+          });
+
+          const prescriptionItem = {
+            name: prescriptionName,
+            type: prescriptionType,
+            qty: 0,
+            medicines: medicines,
+            signa: {
+              id: prescriptionSignaId,
+              name: prescriptionSignaName,
+            }
+          };
+
+          addItem(prescriptionItem);
+
+          clearPrescriptionForm();
+
+          Swal.fire('Success!','You have added '+prescriptionItem.name,'success');
+        }
+
+
       }else{
-        Swal.fire(
-          'Oops!',
-          prescriptionName+' Already in list Prescription items',
-          'error'
-        )
+        Swal.fire('Oops!',prescriptionName+' Already in list Prescription items','error')
       }
+    }else{
+      Swal.fire('Oops!', 'You have to complete the name, signa, and (concoction if type is "racikan")','error')
+    }
   });
 
   $('#js-clear-prescription-form').on('click', function(){
-      clearPrescriptionFrom();
+      clearPrescriptionForm();
   });
 
   // Delete item in prescription table
@@ -216,7 +328,14 @@ $(document).ready(function(){
       removeItem(row);
   });
 
-  $(document).on('keypress', '.js-prescription-item-qty', function(e){
+  // Remove item in concoction table
+  $(document).on('click', '.js-delete-concoction-item', function(e){
+      e.preventDefault();
+      const row = $(this).parents('tr');
+      removeConcoctionItem(row);
+  });
+
+  $(document).on('keypress', '.js-prescription-item-qty, .js-concoction-item-qty', function(e){
     const charCode = (e.which) ? e.which : event.keyCode;
     if (String.fromCharCode(charCode).match(/[^0-9]/g)) return false;
   });
@@ -269,6 +388,14 @@ $(document).ready(function(){
       }
   });
 
+  $(document).on('keyup change', '.js-concoction-item-qty', function(e){
+      let medicineIndex = medicineConcoction.findIndex(item => item.id == $(this).data('medicine'));
+      if(medicineConcoction[medicineIndex]){
+        //Update qty concoction item
+        medicineConcoction[medicineIndex].qty = parseInt($(this).val());
+      }
+  });
+
   $('form#prescription-store').validate({
           ignore: false,
           errorClass: 'is-invalid',
@@ -291,13 +418,6 @@ $(document).ready(function(){
               digits: true
             }
           },
-          // invalidHandler: function(e,validator) {
-          //     // loop through the errors:
-          //     for (var i=0;i<validator.errorList.length;i++){
-          //         // "uncollapse" section containing invalid input/s:
-          //         $(validator.errorList[i].element).closest('.collapse').collapse('show');
-          //     }
-          // },
           errorPlacement: function(error, element) {
              var customError = $([
                '<span class="invalid-feedback d-block">',
@@ -314,10 +434,10 @@ $(document).ready(function(){
              customError.insertAfter( element );
            },
           submitHandler: function(form) {
-            // $('button[type=submit] i', 'form#register').addClass('loader');
-            // $('button[type=submit] span', 'form#register').hide();
-            // $('button[type=submit]', 'form#register').attr('disabled', true);
             if(prescriptionItems.length > 0){
+
+              $('button[type=submit]', 'form#prescription-store').attr('disabled', true);
+
               Swal.fire({
                 title: 'Are you sure you want to submit data?',
                 icon: 'success',
@@ -338,22 +458,30 @@ $(document).ready(function(){
                         prescription_items  : prescriptionItems,
                       },
                       success: function (result) {
-                        console.log(result);
                         if(result.status == false){
-                          swal('Failed', result.message, 'error');
+                          Swal.fire('Oops!', result.message,'error');
                         }else{
-
+                          Swal.fire(
+                            'Success!',
+                            'You have success stored the data.',
+                            'success'
+                          )
+                          window.location.replace(result.data.urlRedirect);
                         }
 
-                      },error:function(result){
-                           console.log(result);
+                      },error:function (request, status, error){
+                        Swal.fire(
+                          'Oops!',
+                          'Something wrong!, please contact admin.',
+                          'error'
+                        );
+
+                       console.log(error);
                       }
-                  });
-                } else {
-                    // $('button[type=submit] i', 'form#register').removeClass('loader');
-                    // $('button[type=submit] span', 'form#register').show();
-                    // $('button[type=submit]', 'form#register').removeAttr("disabled");
-                }
+                    });
+                  }else{
+                      $('button[type=submit]', 'form#prescription-store').removeAttr("disabled");
+                  }
               });
             }else{
               Swal.fire(
@@ -375,17 +503,23 @@ $(document).ready(function(){
   {
       prescriptionItems.push(data);
 
-      prescriptionItemsTable.row.add([
+      data.medicines.forEach((item, i) => {
+
+        prescriptionItemsTable.row.add([
           prescriptionItems.length,
           '<div class="font-weight-bold">'+data.name+'</div><div>'+data.signa.name+'</div>',
           data.type,
-          data.medicines[0].name,
+          item.name,
+          item.qty,
           '<input type="text" class="form-control form-control-sm js-prescription-item-qty" data-prescription="'+data.name+'"" name="qty[]" value="0">',
-          '<input type="text" class="form-control form-control-sm js-prescription-item-stock" data-medicine="'+data.medicines[0].id+'"" id="" value="" readonly>',
+          '<input type="text" class="form-control form-control-sm js-prescription-item-stock" data-medicine="'+item.id+'"" id="" value="" readonly>',
           '<a href="#" class="btn btn-danger btn-sm js-delete-prescription-item"><i class="fas fa-trash-alt"></i></a>'
-      ])
+        ]).node().id ='prescription-item-'+data.name;
 
-      prescriptionItemsTable.draw(false);
+
+        prescriptionItemsTable.draw(false);
+      });
+
 
       loadAvailableStock();
   }
@@ -417,8 +551,41 @@ $(document).ready(function(){
       })
   }
 
+  // Add Item concoction
+  function addItemToConcoction(data)
+  {
+      medicineConcoction.push(data);
+
+      concoctionTable.row.add([
+          data.name,
+          '<input type="text" class="form-control form-control-sm js-concoction-item-qty" data-medicine="'+data.id+'"" name="concoction_qty[]" value="0">',
+          '<a href="#" class="btn btn-danger btn-sm js-delete-concoction-item"><i class="fas fa-trash-alt"></i></a>'
+      ])
+
+      concoctionTable.draw(false);
+
+      // loadAvailableStock();
+  }
+
+  // Remove Item
+  function removeConcoctionItem(row)
+  {
+      Swal.fire({
+        title: 'Are you sure you want to delete concoction item?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, remove it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          concoctionTable.row(row).remove().draw();
+        }
+      })
+  }
+
   // Clear form
-  function clearPrescriptionFrom()
+  function clearPrescriptionForm()
   {
       $('input[name="prescription_name"]').val('');
       $('#medicine_id').empty();
@@ -447,6 +614,22 @@ $(document).ready(function(){
           // let sumValues = values.reduce((a,b) => a + b, 0);
           // $('.js-prescription-item-stock[data-medicine="'+item.id+'"]').val(item.stock - sumValues);
       });
+  }
+
+  function validatePrescription()
+  {
+    if($('input[name="prescription_name"]').val() == '') return false;
+    if($('select[name="prescription_type"] option:selected').val() == '') return false;
+    if($('select[name="signa_id"] option:selected').val() == '') return false;
+
+    if($('select[name="prescription_type"] option:selected').val() == 'racikan' && medicineConcoction.length > 0){
+      return true
+    }else if($('select[name="prescription_type"] option:selected').val() == 'non-racikan'){
+      if($('select[name="signa_id"] option:selected').val() != '') return true
+    }
+
+    return false;
+
   }
 
 });

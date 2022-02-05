@@ -68,14 +68,14 @@ class MedicineController extends Controller
         try {
           $medicine = Medicine::where('stok', '>', 0)->find($request->medicine_id);
           if($medicine){
-            if($medicine->stok > 9){
+            if($medicine->stok > 0){
               return response()->json(['message' => 'Success, Data found', 'status' => true, 'data' => $medicine]);
             }
             return response()->json(['message' => 'Failed, Stock is out', 'status' => false]);
           }
           return response()->json(['message' => 'Failed, Data not found', 'status' => false]);
         } catch (\Exception $e) {
-          Log::error($e);
+          Log::error($e->getMessage());
           return response()->json(['message' => 'Failed, Something wrong and please contact admin~', 'status' => false]);
         }
     }

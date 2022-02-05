@@ -53,8 +53,8 @@
     <div class="col-md-4 col-sm-4 col-12 py-1">
       <label for="validationCustom01" class="form-label">Type</label>
       <select class="form-control" id="type" name="prescription_type">
-        <option value="racikan">Racikan</option>
-        <option value="non-racikan" selected>Non Racikan</option>
+        <option value="racikan" selected>Racikan</option>
+        <option value="non-racikan">Non Racikan</option>
       </select>
       <div class="valid-feedback">
         Looks good!
@@ -80,23 +80,9 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-sm-12 col-md-4">
-      <table class="table table-sm">
-        <thead>
-          <th>No</th>
-          <th>Name</th>
-          <th>Qty</th>
-          <th>Stock</th>
-          <th>#</th>
-        </thead>
+    <div class="col-12 col-sm-12 col-md-4" id="js-medicine-concoction">
+      <table class="table table-sm small" id="concoction-datatable">
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Tes</td>
-            <td>1</td>
-            <td>2</td>
-            <td><i class="fas fa-trash-alt"></i></td>
-          </tr>
         </tbody>
       </table>
     </div>
@@ -116,7 +102,7 @@
 
     <div class="col-sm-12">
       <div class="table-responsive">
-        <table class="table table-sm table-striped small" id="prescription-datatable">
+        <table class="table table-sm table-bordered small" id="prescription-datatable">
           <tbody>
           </tbody>
         </table>

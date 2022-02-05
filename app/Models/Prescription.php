@@ -27,7 +27,7 @@ class Prescription extends Model
         });
     }
 
-    public function prescriptionItems()
+    public function prescription_items()
     {
         return $this->hasMany(PrescriptionItem::class);
     }
@@ -35,5 +35,10 @@ class Prescription extends Model
     public function patient()
     {
         return $this->hasOne(Patient::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

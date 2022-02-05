@@ -67,7 +67,11 @@ class PrescriptionController extends Controller
             }
           }
           DB::commit();
-          return response()->json(['message' => 'Success, Data stored', 'status' => true]);
+          return response()->json([
+                                   'message' => 'Success, Data stored',
+                                   'status' => true,
+                                   'data' => ['urlRedirect' => route('prescription.index')]
+                                 ]);
 
         } catch (\Exception $e) {
           DB::rollback();
@@ -85,7 +89,9 @@ class PrescriptionController extends Controller
      */
     public function show($id)
     {
-        //
+        $prescription = Prescription::with('user', 'prescription_items', 'prescription_items.signa', 'prescription_items.prescription_item_detail', 'prescription_items.prescription_item_detail.medicine')
+                                    ->findOrFail($id);
+        return view('prescription.show', compact('prescription'));
     }
 
     /**
@@ -99,13 +105,6 @@ class PrescriptionController extends Controller
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
         //
@@ -120,5 +119,10 @@ class PrescriptionController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function pdfDownload($id)
+    {
+
     }
 }

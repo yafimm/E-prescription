@@ -20,8 +20,13 @@ class PrescriptionItem extends Model
         return $this->belongsTo(Prescription::class);
     }
 
-    public function presciption_item_detail()
+    public function prescription_item_detail()
     {
         return $this->hasMany(PrescriptionItemDetail::class);
+    }
+
+    public function signa()
+    {
+        return $this->belongsTo(Signa::class, 'signa_id', 'signa_id');
     }
 }

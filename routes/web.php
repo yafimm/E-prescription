@@ -38,6 +38,9 @@ Route::group(['middleware' => ['web', 'auth']], function() {
   ]);
 
   // Prescription Module
+  Route::group(['prefix' => 'prescription'], function() {
+      Route::get('{id}/pdf-download', [App\Http\Controllers\PrescriptionController::class, 'pdfDownload'])->name('prescription.pdf-download');
+  });
   Route::resource('prescription', App\Http\Controllers\PrescriptionController::class);
 
 });

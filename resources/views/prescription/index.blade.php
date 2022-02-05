@@ -33,7 +33,7 @@
               <thead>
                 <tr>
                   <th scope="col">No</th>
-                  <th scope="col">Name</th>
+                  <th scope="col">Code</th>
                   <th scope="col">Created By</th>
                   <th scope="col">Created At</th>
                   <th>#</th>
@@ -43,12 +43,12 @@
                 @foreach($prescriptions as $key => $prescription)
                 <tr>
                   <th scope="row">{{ $key + 1 }}</th>
-                  <td>{{ $prescription->name }}</td>
+                  <td>{{ $prescription->code }}</td>
                   <td>{{ $prescription->user->name }}</td>
                   <td>{{ $prescription->created_at->format('d/m/Y') }}</td>
                   <td>
-                    <a href="#" clas="btn btn-warning btn-sm"><i class="fas fa-file-pdf"></i></a>
-                    <a href="#" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                    <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-file-pdf"></i></a>
+                    <a href="{{ route('prescription.show', $prescription->id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
                   </td>
                 </tr>
                 @endforeach

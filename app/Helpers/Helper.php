@@ -22,7 +22,7 @@ if(!function_exists('HelperSetPrescriptionCode')) {
             if($count)
                 $code .= $count;
             }else{
-                $code .= '001';
+                $code .= '00 1';
             }
         return $code;
     }

@@ -13,7 +13,7 @@ use DB;
 class SignaController extends Controller
 {
 
-    public function index()
+    public function ind ex()
     {
         $signas = Signa::active()->paginate(20);
         return view('signa.index', compact('signas'));
